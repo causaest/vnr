@@ -1,0 +1,13 @@
+---
+title: "Analysis of Vienna Night Run Results"
+subtitle: "Data Preprocessing"
+author: "Alex"
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M:%S')`"
+output: 
+  html_document:
+    df_print: paged
+    toc: true
+    number_sections: false
+---
+
+Load packages.
