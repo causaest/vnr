@@ -11,3 +11,35 @@ output:
 ---
 
 Load packages.
+
+```{r}
+library(dplyr)
+library(purrr)
+```
+
+Read raw data.
+
+```{r}
+read_vnr_raw <- function(year) {
+  path_to_raw <- paste0("../raw/vnr-results-public-", year, ".txt")
+  raw_data <- read.delim(path_to_raw, header = FALSE, na.strings = " ")
+  raw_data <- raw_data[, -c(1, 9)] # Remove columns 1 (index) and 9 (NA)
+  names(raw_data) <- c("id", "name", "sex", "company", "mins_per_km", "km_per_hour", "time")
+  return(raw_data)
+  }
+```
+
+```{r}
+z <- read_vnr_raw(2022)
+# head(z)
+```
+
+```{r}
+time_split <- strsplit(z$time, split = ":")
+time_split[[1]]
+```
+
+```{r}
+table(sapply(time_split, length))
+```
+
