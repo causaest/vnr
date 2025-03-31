@@ -36,6 +36,8 @@ z$tenthsecs <- sapply(1:nrow(z), get_tenthsecs)
 z$time_in_secs <- z$mins * 60 + z$secs + z$tenthsecs * 0.1
 z$time_in_mins <- z$time_in_secs / 60
 
+# 
+
 z$mins_per_km_mins <- map(strsplit(z$mins_per_km, split = ":"), 1) |>
   unlist() |>
   as.integer()

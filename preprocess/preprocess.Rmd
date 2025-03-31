@@ -17,7 +17,7 @@ library(dplyr)
 library(purrr)
 ```
 
-Read raw data.
+Read raw data and add column names.
 
 ```{r}
 read_vnr_raw <- function(year) {
@@ -30,16 +30,38 @@ read_vnr_raw <- function(year) {
 ```
 
 ```{r}
-z <- read_vnr_raw(2022)
+raw_results <- read_vnr_raw(2022)
 # head(z)
 ```
 
+Fix times.
+
 ```{r}
-time_split <- strsplit(z$time, split = ":")
-time_split[[1]]
+fix_times <- function(raw_results) {
+  z <- raw_results
+  # Keep only times less than 60 min
+  z <- z[sapply(strsplit(z$time, split = ":"), length) == 2, ]
+  # Split minutes from the rest
+  time_split <- strsplit(z$time, split = ":")
+  # Populate minutes column
+  z$mins <- as.integer(sapply(time_split, `[[`, 1))
+  z$rest <- sapply(time_split, `[[`, 2)
+  # Split seconds from the tenths of second
+  secs_split <- strsplit(z$rest, split = ",")
+  # Populate seconds column
+  z$secs <- as.integer(sapply(secs_split, `[[`, 1))
+  # Populate tenth of seconds column
+  z$tsecs <- as.integer(sapply(secs_split, `[[`, 2))
+  # Calculate total time in seconds
+  z$time_secs <- z$mins * 60 + z$secs + z$tsecs * 0.1
+  # Calculate total time in minutes
+  z$time_mins <- z$time_secs / 60
+  return(z)
+}
 ```
 
 ```{r}
-table(sapply(time_split, length))
+raw_results <- fix_times(raw_results)
+head(raw_results)
 ```
 
