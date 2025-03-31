@@ -52,6 +52,18 @@ fix_times <- function(raw_results) {
   z$secs <- as.integer(sapply(secs_split, `[[`, 1))
   # Populate tenth of seconds column
   z$tsecs <- as.integer(sapply(secs_split, `[[`, 2))
+  return(z)
+}
+```
+
+```{r}
+raw_results <- fix_times(raw_results)
+head(raw_results)
+```
+
+```{r}
+calc_time <- function(raw_results) {
+  z <- raw_results
   # Calculate total time in seconds
   z$time_secs <- z$mins * 60 + z$secs + z$tsecs * 0.1
   # Calculate total time in minutes
@@ -61,7 +73,22 @@ fix_times <- function(raw_results) {
 ```
 
 ```{r}
-raw_results <- fix_times(raw_results)
+raw_results <- calc_time(raw_results)
 head(raw_results)
 ```
+
+```{r}
+speed_split <- strsplit(raw_results$mins_per_km, split = ":")
+raw_results$secs_per_km <- as.integer(sapply(speed_split, `[[`, 1)) * 60 + 
+  as.integer(sapply(speed_split, `[[`, 2)) 
+```
+
+```{r}
+raw_results$perf_diff <- raw_results$secs_per_km - raw_results$time_secs/5
+```
+
+```{r}
+plot(raw_results$tsecs, raw_results$perf_diff)
+```
+
 
