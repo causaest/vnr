@@ -26,10 +26,10 @@ read_vnr_raw <- function(year) {
 results <- read_vnr_raw(2022)
 ```
 
-Fix times.
+Calculate time.
 
 ```{r}
-fix_times <- function(results) {
+calc_time <- function(results) {
   z <- results
   # Keep only times less than 60 min
   z <- z[sapply(strsplit(z$time, split = ":"), length) == 2, ]
@@ -44,17 +44,6 @@ fix_times <- function(results) {
   z$secs <- as.integer(sapply(secs_split, `[[`, 1))
   # Populate tenth of seconds column
   z$tsecs <- as.integer(sapply(secs_split, `[[`, 2))
-  return(z)
-}
-```
-
-```{r}
-results <- fix_times(results)
-```
-
-```{r}
-calc_time <- function(results) {
-  z <- results
   # Calculate total time in seconds
   z$time_secs <- z$mins * 60 + z$secs + z$tsecs * 0.1
   # Calculate total time in minutes
@@ -68,7 +57,28 @@ calc_time <- function(results) {
 results <- calc_time(results)
 ```
 
-Confirmation of pace as provided in the dataset.
+...
+
+```{r}
+fix_factors <- function(results) {
+  z <- results
+  # Calculate correct speed
+  # z$km_per_hour <- 5 * 60 * 60 / z$time_secs
+  # Fix sex
+  z$sex <- ifelse(z$sex == "m", "m", 
+                      ifelse(z$sex == "w", "f", NA)) |> 
+  as.factor()
+  # Convert company affiliation to boolean
+  z$affiliated <- ifelse(is.na(z$company), FALSE, TRUE)
+  return(z)
+}
+```
+
+```{r}
+results <- fix_factors(results)
+```
+
+Confirm pace as provided in the dataset.
 
 ```{r}
 conf_pace <- function(results) {
@@ -80,43 +90,53 @@ conf_pace <- function(results) {
   z$pace_secs <- z$secs_per_km_calc_floor %% 60
   # Get the seconds of the "seconds per km" pace from the original data
   pace_split <- strsplit(z$mins_per_km, split = ":")
-  z$pace_secs_orig <- as.integer(sapply(speed_split, `[[`, 2))
+  z$pace_secs_orig <- as.integer(sapply(pace_split, `[[`, 2))
   ind <- which(z$pace_secs - z$pace_secs_orig != 0)
   confirmed <- if(length(ind) == 0) { TRUE } else { FALSE }
   return(confirmed)
 }
+```
 
+```{r}
 conf_pace(results)
 ```
 
 ```{r}
-final_fix <- function(results) {
+correct_speed <- function(results) {
   z <- results
   # Calculate correct speed
   z$km_per_hour <- 5 * 60 * 60 / z$time_secs
-  # Fix sex
-  z$sex <- ifelse(z$sex == "m", "m", 
-                      ifelse(z$sex == "w", "f", NA)) |> 
-  as.factor()
-  # Convert company affiliation to boolean
-  z$affiliated <- ifelse(is.na(z$company), FALSE, TRUE)
   return(z)
 }
+```
 
-results <- final_fix(results)
+```{r}
+results <- correct_speed(results)
+```
+
+```{r}
+keep_cols <- function(results) {
+  z <- results
+  z <- z[, c("id", "sex", "affiliated", "time_secs")]
+  return(z)
+}
+```
+
+```{r}
+results <- keep_cols(results)
 ```
 
 Write pre-processed results.
 
 ```{r}
-
-```
-
-
-```{r}
 write_vnr_processed <- function(year) {
-  results <- year |> read_vnr_raw() |> fix_times() |> calc_time() |> final_fix()
-  path_to_processed <- paste0("../raw/vnr-results-processed-", year, ".rds")
+  results <- year |> 
+    read_vnr_raw() |> 
+    calc_time() |>
+    fix_factors() |> 
+    correct_speed() |> 
+    keep_cols()
+  path_to_processed <- paste0("vnr-results-processed-", year, ".rds")
   saveRDS(results, file = path_to_processed)
   }
 ```
