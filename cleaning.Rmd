@@ -85,9 +85,8 @@ conf_pace <- function(results) {
 }
 ```
 
-To check a prticular year, run:
-
 ```{r}
+## To check a prticular year, run:
 # 2022 |> 
 #     read_vnr_raw() |> 
 #     calc_time() |>
