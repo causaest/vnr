@@ -1,6 +1,6 @@
 ---
 title: "Analysis of Vienna Night Run Results"
-subtitle: "Data Preprocessing"
+subtitle: "Data Cleaning"
 author: "Alex"
 date: "`r format(Sys.time(), '%d %B %Y, %H:%M:%S')`"
 output: 
@@ -14,26 +14,23 @@ Read raw data and add column names.
 
 ```{r}
 read_vnr_raw <- function(year) {
-  path_to_raw <- paste0("../raw/vnr-results-public-", year, ".txt")
+  path_to_raw <- paste0("data/raw/vnr-results-public-", year, ".txt")
   raw_data <- read.delim(path_to_raw, header = FALSE, na.strings = " ")
   raw_data <- raw_data[, -c(1, 9)] # Remove columns 1 (index) and 9 (NA)
+  # Add column names
   names(raw_data) <- c("id", "name", "sex", "company", "mins_per_km", "km_per_hour", "time")
   return(raw_data)
   }
 ```
 
-```{r}
-results <- read_vnr_raw(2022)
-```
-
-Calculate time.
+Calculate time attributes.
 
 ```{r}
 calc_time <- function(results) {
   z <- results
   # Keep only times less than 60 min
   z <- z[sapply(strsplit(z$time, split = ":"), length) == 2, ]
-  # Split minutes from the rest
+  # Split minutes part from the rest
   time_split <- strsplit(z$time, split = ":")
   # Populate minutes column
   z$mins <- as.integer(sapply(time_split, `[[`, 1))
@@ -48,22 +45,17 @@ calc_time <- function(results) {
   z$time_secs <- z$mins * 60 + z$secs + z$tsecs * 0.1
   # Calculate total time in minutes
   z$time_mins <- z$time_secs / 60
+  # Calculate pace (seconds per km)
   z$secs_per_km_calc <- z$time_secs / 5
   return(z)
 }
 ```
 
-```{r}
-results <- calc_time(results)
-```
-
-...
+Fix categorical factors.
 
 ```{r}
 fix_factors <- function(results) {
   z <- results
-  # Calculate correct speed
-  # z$km_per_hour <- 5 * 60 * 60 / z$time_secs
   # Fix sex
   z$sex <- ifelse(z$sex == "m", "m", 
                       ifelse(z$sex == "w", "f", NA)) |> 
@@ -74,11 +66,7 @@ fix_factors <- function(results) {
 }
 ```
 
-```{r}
-results <- fix_factors(results)
-```
-
-Confirm pace as provided in the dataset.
+Confirm pace as (incorrectly) provided in the original dataset.
 
 ```{r}
 conf_pace <- function(results) {
@@ -97,22 +85,27 @@ conf_pace <- function(results) {
 }
 ```
 
+To check a prticular year, run:
+
 ```{r}
-conf_pace(results)
+# 2022 |> 
+#     read_vnr_raw() |> 
+#     calc_time() |>
+#     fix_factors() |> 
+#     conf_pace()
 ```
+
+Calculate correct speed.
 
 ```{r}
 correct_speed <- function(results) {
   z <- results
-  # Calculate correct speed
   z$km_per_hour <- 5 * 60 * 60 / z$time_secs
   return(z)
 }
 ```
 
-```{r}
-results <- correct_speed(results)
-```
+Keep only relevant columns.
 
 ```{r}
 keep_cols <- function(results) {
@@ -122,25 +115,25 @@ keep_cols <- function(results) {
 }
 ```
 
-```{r}
-results <- keep_cols(results)
-```
-
-Write pre-processed results.
+Save cleaned results.
 
 ```{r}
-write_vnr_processed <- function(year) {
+write_vnr_clean <- function(year) {
   results <- year |> 
     read_vnr_raw() |> 
     calc_time() |>
     fix_factors() |> 
     correct_speed() |> 
     keep_cols()
-  path_to_processed <- paste0("vnr-results-processed-", year, ".rds")
-  saveRDS(results, file = path_to_processed)
+  path_to_clean <- paste0("data/interim/vnr-results-clean-", year)
+  write.table(results, file = paste0(path_to_clean, ".csv"), 
+              sep = ";", row.names = FALSE)
+  saveRDS(results, file = paste0(path_to_clean, ".rds"))
   }
 ```
 
 ```{r}
-write_vnr_processed(2022)
+write_vnr_clean(2022)
+write_vnr_clean(2023)
+write_vnr_clean(2024)
 ```
