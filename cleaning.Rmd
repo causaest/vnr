@@ -61,7 +61,7 @@ fix_factors <- function(results) {
                       ifelse(z$sex == "w", "f", NA)) |> 
   as.factor()
   # Convert company affiliation to boolean
-  z$affiliated <- ifelse(is.na(z$company), FALSE, TRUE)
+  z$affiliated <- !is.na(z$company)
   return(z)
 }
 ```
@@ -72,25 +72,26 @@ Confirm pace as (incorrectly) provided in the original dataset.
 conf_pace <- function(results) {
   z <- results
   # Round the calculated seconds per km to the lowest integer. This is 
-  # technically incorrect, but it's how it's handled in the original data.
+  # technically incorrect, but it's how it's handled in the original data!
   z$secs_per_km_calc_floor <- floor(z$secs_per_km_calc)
   # Extract the seconds of the "seconds per km" pace
   z$pace_secs <- z$secs_per_km_calc_floor %% 60
-  # Get the seconds of the "seconds per km" pace from the original data
+  # Get the seconds part of the "seconds per km" pace from the original data
   pace_split <- strsplit(z$mins_per_km, split = ":")
   z$pace_secs_orig <- as.integer(sapply(pace_split, `[[`, 2))
+  # Check which cases differ
   ind <- which(z$pace_secs - z$pace_secs_orig != 0)
-  confirmed <- if(length(ind) == 0) { TRUE } else { FALSE }
+  confirmed <- (length(ind) == 0)
   return(confirmed)
 }
 ```
 
 ```{r}
 ## To check a prticular year, run:
-# 2022 |> 
-#     read_vnr_raw() |> 
+# 2022 |>
+#     read_vnr_raw() |>
 #     calc_time() |>
-#     fix_factors() |> 
+#     fix_factors() |>
 #     conf_pace()
 ```
 
@@ -114,7 +115,7 @@ keep_cols <- function(results) {
 }
 ```
 
-Save cleaned results.
+Save cleaned results, both as RDS and CSV.
 
 ```{r}
 write_vnr_clean <- function(year) {
