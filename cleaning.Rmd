@@ -60,8 +60,8 @@ fix_factors <- function(results) {
   z$sex <- ifelse(z$sex == "m", "m", 
                       ifelse(z$sex == "w", "f", NA)) |> 
   as.factor()
-  # Convert company affiliation to boolean
-  z$affiliated <- !is.na(z$company)
+  # Convert company affiliation to binary
+  z$affiliated <- (!is.na(z$company)) |> as.integer()
   return(z)
 }
 ```
