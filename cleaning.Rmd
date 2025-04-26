@@ -10,7 +10,7 @@ output:
     number_sections: false
 ---
 
-Read raw data and add column names.
+Read raw data and add column names
 
 ```{r}
 read_vnr_raw <- function(year) {
@@ -23,7 +23,7 @@ read_vnr_raw <- function(year) {
   }
 ```
 
-Calculate time attributes.
+Calculate time attributes
 
 ```{r}
 calc_time <- function(results) {
@@ -51,7 +51,7 @@ calc_time <- function(results) {
 }
 ```
 
-Fix categorical factors.
+Fix categorical factors
 
 ```{r}
 fix_factors <- function(results) {
@@ -66,7 +66,7 @@ fix_factors <- function(results) {
 }
 ```
 
-Confirm pace as (incorrectly) provided in the original dataset.
+Confirm pace as (incorrectly) provided in the original dataset
 
 ```{r}
 conf_pace <- function(results) {
@@ -95,7 +95,7 @@ conf_pace <- function(results) {
 #     conf_pace()
 ```
 
-Calculate correct speed.
+Calculate correct speed
 
 ```{r}
 correct_speed <- function(results) {
@@ -105,7 +105,7 @@ correct_speed <- function(results) {
 }
 ```
 
-Keep only relevant columns.
+Keep only relevant columns
 
 ```{r}
 keep_cols <- function(results) {
@@ -115,7 +115,29 @@ keep_cols <- function(results) {
 }
 ```
 
-Save cleaned results, both as RDS and CSV.
+Save cleaned anonymous results, both as RDS and CSV
+
+```{r}
+write_vnr_full <- function(year) {
+  results <- year |> 
+    read_vnr_raw() |> 
+    calc_time() |>
+    fix_factors() |> 
+    correct_speed()
+  path_to_full <- paste0("data/raw/vnr-results-full-", year)
+  write.table(results, file = paste0(path_to_full, ".csv"), 
+              sep = ";", row.names = FALSE)
+  saveRDS(results, file = paste0(path_to_full, ".rds"))
+  }
+```
+
+```{r}
+write_vnr_full(2022)
+write_vnr_full(2023)
+write_vnr_full(2024)
+```
+
+Save cleaned anonymous results, both as RDS and CSV
 
 ```{r}
 write_vnr_clean <- function(year) {
