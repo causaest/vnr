@@ -11,3 +11,53 @@ output:
 ---
 
 Read full data
+
+```{r}
+vnr_2022 <- readRDS("data/raw/vnr-results-full-2022.rds")
+vnr_2023 <- readRDS("data/raw/vnr-results-full-2023.rds")
+vnr_2024 <- readRDS("data/raw/vnr-results-full-2024.rds")
+```
+
+```{r}
+cols_keep <- c("id", "name", "sex", "company", "time_secs")
+```
+
+```{r}
+vnr_2022 <- vnr_2022[, cols_keep]
+vnr_2023 <- vnr_2023[, cols_keep]
+vnr_2024 <- vnr_2024[, cols_keep]
+```
+
+```{r}
+z1 <- merge(x = vnr_2022, y = vnr_2023, by = "name", suffixes = c("_2022", "_2023"))
+
+# Before merging 2024 results, rename its columns except "name" to add the suffix "_2024"
+names(vnr_2024)[names(vnr_2024) != "name"] <- paste0(names(vnr_2024)[names(vnr_2024) != "name"], "_2024")
+
+z <- merge(x = z1, y = vnr_2024, by = "name")
+
+head(z)
+```
+
+```{r}
+z_sex = z[, c("name", "sex_2022", "sex_2023", "sex_2024")]
+z_sex$sex_diff <- apply(z_sex[, c("sex_2022", "sex_2023", "sex_2024")], 1, function(x) length(unique(x)) != 1)
+z_sex[z_sex$sex_diff, c("name", "sex_2022", "sex_2023", "sex_2024")]
+```
+
+```{r}
+z_sex = z[, c("name", "company_2022", "company_2023", "company_2024")]
+z_sex$sex_diff <- apply(z_sex[, c("company_2022", "company_2023", "company_2024")], 1, function(x) length(unique(x)) != 1)
+z_sex[z_sex$sex_diff, c("name", "company_2022", "company_2023", "company_2024")]
+```
+
+
+
+
+
+
+
+
+
+
+
