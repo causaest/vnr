@@ -13,31 +13,44 @@ output:
 Read full data
 
 ```{r}
-vnr_2022 <- readRDS("data/raw/vnr-results-full-2022.rds")
-vnr_2023 <- readRDS("data/raw/vnr-results-full-2023.rds")
-vnr_2024 <- readRDS("data/raw/vnr-results-full-2024.rds")
+cols_to_keep <- c("name", "id", "sex", "company", "time_secs")
 ```
 
 ```{r}
-cols_keep <- c("id", "name", "sex", "company", "time_secs")
+read_full_data <- function(year) {
+  z <- readRDS(paste0("data/raw/vnr-results-full-", year, ".rds"))
+  z <- z[, cols_to_keep]
+  return(z)
+}
 ```
 
 ```{r}
-vnr_2022 <- vnr_2022[, cols_keep]
-vnr_2023 <- vnr_2023[, cols_keep]
-vnr_2024 <- vnr_2024[, cols_keep]
+vnr_2022 <- read_full_data(2022)
+vnr_2023 <- read_full_data(2023)
+vnr_2024 <- read_full_data(2024)
 ```
 
 ```{r}
-z1 <- merge(x = vnr_2022, y = vnr_2023, by = "name", suffixes = c("_2022", "_2023"))
+fix_names <- function(x, year) {
+  names(x)[names(x) != "name"] <- paste0(names(x)[names(x) != "name"], "_", year)
+  return(x)
+}
+```
 
-# Before merging 2024 results, rename its columns except "name" to add the suffix "_2024"
-names(vnr_2024)[names(vnr_2024) != "name"] <- paste0(names(vnr_2024)[names(vnr_2024) != "name"], "_2024")
+```{r}
+vnr_2022 <- fix_names(vnr_2022, 2022)
+vnr_2023 <- fix_names(vnr_2023, 2023)
+vnr_2024 <- fix_names(vnr_2024, 2024)
+```
 
+```{r}
+z1 <- merge(x = vnr_2022, y = vnr_2023, by = "name")
 z <- merge(x = z1, y = vnr_2024, by = "name")
 
 head(z)
 ```
+
+uptohere
 
 ```{r}
 z_sex = z[, c("name", "sex_2022", "sex_2023", "sex_2024")]
